@@ -13,6 +13,7 @@ void PrismWallbox::dump_config() {
 }
 
 void PrismWallbox::setup() {
+  if (this->power_grid_sensor_ != nullptr) this->power_grid_sensor_->publish_state(0);
 }
 
 
