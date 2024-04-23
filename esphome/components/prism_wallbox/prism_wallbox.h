@@ -2,6 +2,8 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
+// #include "esphome/components/mqtt/mqtt_client.h"
+// #include "esphome/components/mqtt_subscribe/sensor/mqtt_subscribe_sensor.h"
 
 namespace esphome {
 namespace prism_wallbox {
@@ -10,6 +12,7 @@ class PrismWallbox : public Component {
   public:
     std::string mqtt_prefix_;
     int port_;
+    // sensor::MQTTSubscribeSensor* power_grid_sensor_;
     sensor::Sensor* power_grid_sensor_;
 
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }

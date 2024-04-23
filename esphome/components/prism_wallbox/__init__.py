@@ -6,7 +6,8 @@ from esphome.const import UNIT_WATT
 from esphome.const import DEVICE_CLASS_POWER
 from esphome.const import STATE_CLASS_MEASUREMENT
 
-AUTO_LOAD = ['sensor']
+AUTO_LOAD = ['mqtt_subscribe']
+# DEPENDENCIES = ['mqtt_subscribe']
 
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
