@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/mqtt/mqtt_client.h"
 
 namespace esphome {
@@ -16,9 +17,11 @@ class PrismWallbox : public Component {
     float grid_power_;
     float voltage_;
     std::string raw_state_;
+    std::string text_state_;
     sensor::Sensor* power_grid_sensor_;
     sensor::Sensor* temperature_sensor_;
     sensor::Sensor* voltage_sensor_;
+    text_sensor::TextSensor* state_sensor_;
 
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }
     void set_port(int port) { port_ = std::to_string(port); }
@@ -27,6 +30,7 @@ class PrismWallbox : public Component {
     void set_power_grid_sensor(sensor::Sensor *power_grid_sensor) { power_grid_sensor_ = power_grid_sensor; }
     void set_temperature_sensor(sensor::Sensor *temperature_sensor) { temperature_sensor_ = temperature_sensor; }
     void set_voltage_sensor(sensor::Sensor *voltage_sensor) { voltage_sensor_ = voltage_sensor; }
+    void set_state_sensor(text_sensor::TextSensor *state_sensor) { state_sensor_ = state_sensor; }
     void dump_config() override;
     void setup() override;
     void on_grid_power_change(float value);

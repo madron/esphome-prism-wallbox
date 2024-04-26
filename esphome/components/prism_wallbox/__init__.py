@@ -1,12 +1,12 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor
-from esphome.const import CONF_ID, CONF_PORT, CONF_QOS, CONF_TEMPERATURE, CONF_VOLTAGE
+from esphome.components import sensor, text_sensor
+from esphome.const import CONF_ID, CONF_PORT, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
 from esphome.const import UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT
 from esphome.const import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
 from esphome.const import STATE_CLASS_MEASUREMENT
 
-AUTO_LOAD = ['sensor', 'mqtt']
+AUTO_LOAD = ['sensor', 'text_sensor', 'mqtt']
 
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
@@ -44,6 +44,7 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_STATE): text_sensor.text_sensor_schema(),
     }
 )
 
@@ -67,3 +68,7 @@ async def to_code(config):
         conf = config[CONF_VOLTAGE]
         sens = await sensor.new_sensor(conf)
         cg.add(var.set_voltage_sensor(sens))
+    if CONF_STATE in config:
+        conf = config[CONF_STATE]
+        sens = await text_sensor.new_text_sensor(conf)
+        cg.add(var.set_state_sensor(sens))

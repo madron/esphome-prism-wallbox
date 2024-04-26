@@ -87,11 +87,31 @@ void PrismWallbox::on_voltage_change(float value) {
 }
 
 void PrismWallbox::on_raw_state_change(std::string value) {
+  this->raw_state_ = value;
   // 1 -> Unplugged
   // 2 -> Waiting
   // 3 -> Charging
   // 4 -> Pause
-  this->raw_state_ = value;
+  std::string text_state;
+  if (value == "1") {
+    text_state = "Unplugged";
+  }
+  else if (value == "2") {
+    text_state = "Waiting";
+  }
+  else if (value == "3") {
+    text_state = "Charging";
+  }
+  else if (value == "4") {
+    text_state = "Pause";
+  }
+  else {
+    text_state = value;
+  }
+  this->text_state_ = text_state;
+  if (this->state_sensor_ != nullptr) {
+    this->state_sensor_->publish_state(text_state);
+  }
 }
 
 
