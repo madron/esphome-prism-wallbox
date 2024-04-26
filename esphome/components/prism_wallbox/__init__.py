@@ -1,21 +1,26 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import sensor, text_sensor
-from esphome.const import CONF_ID, CONF_PORT, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
-from esphome.const import UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT
-from esphome.const import DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
+from esphome.components import number, sensor, text_sensor
+from esphome.const import CONF_ID, CONF_MAX_CURRENT, CONF_PORT, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
+from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT
+from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
 from esphome.const import STATE_CLASS_MEASUREMENT
 
-AUTO_LOAD = ['sensor', 'text_sensor', 'mqtt']
+AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'mqtt']
 
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
 CONF_POWER_METER = 'power_meter'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 
+MAX_CURRENT_MIN = 6
+MAX_CURRENT_MAX = 32
+MAX_CURRENT_STEP = 1
+
 
 prism_wallbox_ns = cg.esphome_ns.namespace('prism_wallbox')
 PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
+MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -45,6 +50,12 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_MEASUREMENT,
         ),
         cv.Optional(CONF_STATE): text_sensor.text_sensor_schema(),
+        cv.Optional(CONF_MAX_CURRENT): number.number_schema(
+            # number.Number,
+            MaxCurrent,
+            unit_of_measurement=UNIT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+        ),
     }
 )
 
@@ -72,3 +83,9 @@ async def to_code(config):
         conf = config[CONF_STATE]
         sens = await text_sensor.new_text_sensor(conf)
         cg.add(var.set_state_sensor(sens))
+    if CONF_MAX_CURRENT in config:
+        conf = config[CONF_MAX_CURRENT]
+        sens = await number.new_number(conf, min_value=MAX_CURRENT_MIN, max_value=MAX_CURRENT_MAX, step=MAX_CURRENT_STEP)
+        await cg.register_parented(sens, config[CONF_ID])
+        cg.add(sens.setup())
+        cg.add(var.set_max_current_sensor(sens))

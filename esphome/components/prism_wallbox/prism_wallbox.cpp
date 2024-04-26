@@ -70,6 +70,22 @@ void PrismWallbox::setup() {
     },
     this->qos_
   );
+  // max_current_sensor_
+  if (this->max_current_sensor_ != nullptr) {
+    mqtt::global_mqtt_client->subscribe(
+      this->mqtt_prefix_ + "/" + this->port_ + "/user_amp",
+      [this](const std::string &topic, const std::string &payload) {
+        auto val = parse_number<float>(payload);
+        if (!val.has_value()) {
+          ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
+          this->max_current_sensor_->publish_state(NAN);
+          return;
+        }
+        this->max_current_sensor_->publish_state(*val);
+      },
+      this->qos_
+    );
+  }
 }
 
 void PrismWallbox::on_grid_power_change(float value) {
@@ -114,6 +130,17 @@ void PrismWallbox::on_raw_state_change(std::string value) {
   }
 }
 
+
+MaxCurrent::MaxCurrent() {}
+
+void MaxCurrent::setup() {
+  this->command_topic_ = this->parent_->mqtt_prefix_ + "/" + this->parent_->port_ + "/command/set_current_user";
+}
+
+void MaxCurrent::control(float value) {
+  std::string topic = this->parent_->mqtt_prefix_ + "/" + this->parent_->port_ + "/command/set_current_user";
+  mqtt::global_mqtt_client->publish(this->command_topic_, std::to_string(value), this->parent_->qos_, false);
+}
 
 }  // namespace prism_wallbox
 }  // namespace esphome
