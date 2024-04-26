@@ -10,6 +10,7 @@ AUTO_LOAD = ['sensor', 'mqtt']
 
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
+CONF_POWER_METER = 'power_meter'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 
 
@@ -23,6 +24,7 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Required(CONF_MQTT_PREFIX): cv.alphanumeric,
         cv.Optional(CONF_PORT, default=1): cv.int_range(min=1, max=2),
         cv.Optional(CONF_QOS, default=0): cv.mqtt_qos,
+        cv.Optional(CONF_POWER_METER, default=True): cv.boolean,
         cv.Optional(CONF_POWER_GRID): sensor.sensor_schema(
             unit_of_measurement=UNIT_WATT,
             accuracy_decimals=0,
@@ -40,6 +42,7 @@ async def to_code(config):
     cg.add(var.set_mqtt_prefix(config[CONF_MQTT_PREFIX]))
     cg.add(var.set_port(config[CONF_PORT]))
     cg.add(var.set_qos(config[CONF_QOS]))
+    cg.add(var.set_power_meter(config[CONF_POWER_METER]))
     if CONF_POWER_GRID in config:
         conf = config[CONF_POWER_GRID]
         sens = await sensor.new_sensor(conf)
