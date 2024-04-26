@@ -10,11 +10,12 @@ namespace prism_wallbox {
 class PrismWallbox : public Component {
   public:
     std::string mqtt_prefix_;
-    std::string  port_;
+    std::string port_;
     uint8_t qos_;
     bool power_meter_;
     float grid_power_;
     float voltage_;
+    std::string raw_state_;
     sensor::Sensor* power_grid_sensor_;
     sensor::Sensor* temperature_sensor_;
     sensor::Sensor* voltage_sensor_;
@@ -30,6 +31,7 @@ class PrismWallbox : public Component {
     void setup() override;
     void on_grid_power_change(float value);
     void on_voltage_change(float value);
+    void on_raw_state_change(std::string value);
 };
 
 }  // namespace prism_wallbox

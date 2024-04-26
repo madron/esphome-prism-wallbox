@@ -47,7 +47,7 @@ void PrismWallbox::setup() {
       this->qos_
     );
   }
-  // voltage_sensor_
+  // voltage
   this->on_voltage_change(NAN);
   mqtt::global_mqtt_client->subscribe(
     this->mqtt_prefix_ + "/" + this->port_ + "/volt",
@@ -59,6 +59,14 @@ void PrismWallbox::setup() {
         return;
       }
       this->on_voltage_change(*val);
+    },
+    this->qos_
+  );
+  // raw_state
+  mqtt::global_mqtt_client->subscribe(
+    this->mqtt_prefix_ + "/" + this->port_ + "/state",
+    [this](const std::string &topic, const std::string &payload) {
+      this->on_raw_state_change(payload);
     },
     this->qos_
   );
@@ -76,6 +84,14 @@ void PrismWallbox::on_voltage_change(float value) {
   if (this->voltage_sensor_ != nullptr) {
         this->voltage_sensor_->publish_state(value);
   }
+}
+
+void PrismWallbox::on_raw_state_change(std::string value) {
+  // 1 -> Unplugged
+  // 2 -> Waiting
+  // 3 -> Charging
+  // 4 -> Pause
+  this->raw_state_ = value;
 }
 
 
