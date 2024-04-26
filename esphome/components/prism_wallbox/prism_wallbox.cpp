@@ -26,7 +26,6 @@ void PrismWallbox::setup() {
           this->on_grid_power_change(NAN);
           return;
         }
-        val = *val * (float)-1;
         this->on_grid_power_change(*val);
       },
       this->qos_
