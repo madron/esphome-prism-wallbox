@@ -17,9 +17,8 @@ void PrismWallbox::dump_config() {
 void PrismWallbox::setup() {
   // power_meter_
   if (this->power_meter_) {
-    this->power_grid_topic_ = this->mqtt_prefix_ + "/energy_data/power_grid";
     mqtt::global_mqtt_client->subscribe(
-      this->power_grid_topic_,
+      this->mqtt_prefix_ + "/energy_data/power_grid",
       [this](const std::string &topic, const std::string &payload) {
         auto val = parse_number<float>(payload);
         if (!val.has_value()) {
@@ -29,6 +28,22 @@ void PrismWallbox::setup() {
         }
         val = *val * (float)-1;
         this->on_grid_power_change(*val);
+      },
+      this->qos_
+    );
+  }
+  // temperature_sensor_
+  if (this->temperature_sensor_ != nullptr) {
+    mqtt::global_mqtt_client->subscribe(
+      this->mqtt_prefix_ + "/0/temperature/core",
+      [this](const std::string &topic, const std::string &payload) {
+        auto val = parse_number<float>(payload);
+        if (!val.has_value()) {
+          ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
+          this->temperature_sensor_->publish_state(NAN);
+          return;
+        }
+        this->temperature_sensor_->publish_state(*val);
       },
       this->qos_
     );
