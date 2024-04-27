@@ -11,16 +11,21 @@ AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'mqtt']
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
 CONF_POWER_METER = 'power_meter'
+CONF_LIMIT_CURRENT = 'limit_current'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 
 MAX_CURRENT_MIN = 6
 MAX_CURRENT_MAX = 32
 MAX_CURRENT_STEP = 1
+LIMIT_CURRENT_MIN = 6
+LIMIT_CURRENT_MAX = 32
+LIMIT_CURRENT_STEP = 0.1
 
 
 prism_wallbox_ns = cg.esphome_ns.namespace('prism_wallbox')
 PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
 MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
+LimitCurrent = prism_wallbox_ns.class_('LimitCurrent', number.Number)
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -51,8 +56,12 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_STATE): text_sensor.text_sensor_schema(),
         cv.Optional(CONF_MAX_CURRENT): number.number_schema(
-            # number.Number,
             MaxCurrent,
+            unit_of_measurement=UNIT_AMPERE,
+            device_class=DEVICE_CLASS_CURRENT,
+        ),
+        cv.Optional(CONF_LIMIT_CURRENT): number.number_schema(
+            LimitCurrent,
             unit_of_measurement=UNIT_AMPERE,
             device_class=DEVICE_CLASS_CURRENT,
         ),
@@ -87,5 +96,9 @@ async def to_code(config):
         conf = config[CONF_MAX_CURRENT]
         sens = await number.new_number(conf, min_value=MAX_CURRENT_MIN, max_value=MAX_CURRENT_MAX, step=MAX_CURRENT_STEP)
         await cg.register_parented(sens, config[CONF_ID])
-        cg.add(sens.setup())
         cg.add(var.set_max_current_sensor(sens))
+    if CONF_LIMIT_CURRENT in config:
+        conf = config[CONF_LIMIT_CURRENT]
+        sens = await number.new_number(conf, min_value=LIMIT_CURRENT_MIN, max_value=LIMIT_CURRENT_MAX, step=LIMIT_CURRENT_STEP)
+        await cg.register_parented(sens, config[CONF_ID])
+        cg.add(var.set_limit_current_sensor(sens))

@@ -14,6 +14,8 @@ void PrismWallbox::dump_config() {
 }
 
 void PrismWallbox::setup() {
+  this->max_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_user";
+  this->limit_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_limit";
   // power_meter_
   this->on_grid_power_change(NAN);
   if (this->power_meter_) {
@@ -133,13 +135,16 @@ void PrismWallbox::on_raw_state_change(std::string value) {
 
 MaxCurrent::MaxCurrent() {}
 
-void MaxCurrent::setup() {
-  this->command_topic_ = this->parent_->mqtt_prefix_ + "/" + this->parent_->port_ + "/command/set_current_user";
+void MaxCurrent::control(float value) {
+  mqtt::global_mqtt_client->publish(this->parent_->max_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
 }
 
-void MaxCurrent::control(float value) {
-  std::string topic = this->parent_->mqtt_prefix_ + "/" + this->parent_->port_ + "/command/set_current_user";
-  mqtt::global_mqtt_client->publish(this->command_topic_, std::to_string(value), this->parent_->qos_, false);
+
+LimitCurrent::LimitCurrent() {}
+
+void LimitCurrent::control(float value) {
+  mqtt::global_mqtt_client->publish(this->parent_->limit_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
+  this->publish_state(value);
 }
 
 }  // namespace prism_wallbox
