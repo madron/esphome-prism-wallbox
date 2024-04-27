@@ -18,9 +18,6 @@ ICON_EV_PLUG = 'mdi:ev-plug-type2'
 MAX_CURRENT_MIN = 6
 MAX_CURRENT_MAX = 32
 MAX_CURRENT_STEP = 1
-CONTROL_CURRENT_MIN = 6
-CONTROL_CURRENT_MAX = 32
-CONTROL_CURRENT_STEP = 0.100000000000000  # With 0.1 it is coverted as 0.100000001
 
 
 prism_wallbox_ns = cg.esphome_ns.namespace('prism_wallbox')
@@ -63,10 +60,11 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_AMPERE,
             device_class=DEVICE_CLASS_CURRENT,
         ),
-        cv.Optional(CONF_CONTROL_CURRENT): number.number_schema(
-            ControlCurrent,
+        cv.Optional(CONF_CONTROL_CURRENT): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
+            accuracy_decimals=1,
             device_class=DEVICE_CLASS_CURRENT,
+            state_class=STATE_CLASS_MEASUREMENT,
         ),
     }
 )
@@ -102,7 +100,5 @@ async def to_code(config):
         cg.add(var.set_max_current_number(entity))
     if CONF_CONTROL_CURRENT in config:
         conf = config[CONF_CONTROL_CURRENT]
-        conf[CONF_MODE] = number.NumberMode.NUMBER_MODE_SLIDER
-        entity = await number.new_number(conf, min_value=CONTROL_CURRENT_MIN, max_value=CONTROL_CURRENT_MAX, step=CONTROL_CURRENT_STEP)
-        await cg.register_parented(entity, config[CONF_ID])
-        cg.add(var.set_control_current_number(entity))
+        entity = await sensor.new_sensor(conf)
+        cg.add(var.set_control_current_sensor(entity))

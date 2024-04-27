@@ -1,3 +1,4 @@
+// #include <sstream>
 #include "prism_wallbox.h"
 #include "esphome/core/log.h"
 
@@ -88,18 +89,18 @@ void PrismWallbox::setup() {
       this->qos_
     );
   }
-  // control_current_number_
-  if (this->control_current_number_ != nullptr) {
+  // control_current_sensor_
+  if (this->control_current_sensor_ != nullptr) {
     mqtt::global_mqtt_client->subscribe(
       this->control_current_command_topic_,
       [this](const std::string &topic, const std::string &payload) {
         auto val = parse_number<float>(payload);
         if (!val.has_value()) {
           ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
-          this->control_current_number_->publish_state(NAN);
+          this->control_current_sensor_->publish_state(NAN);
           return;
         }
-        this->control_current_number_->publish_state(*val);
+        this->control_current_sensor_->publish_state(*val);
       },
       this->qos_
     );
@@ -148,6 +149,14 @@ void PrismWallbox::on_raw_state_change(std::string value) {
   }
 }
 
+void PrismWallbox::set_control_current(float value) {
+  char buffer[4];
+  std::snprintf(buffer, 4, "%.1f", value);
+  std::string payload(buffer);
+  mqtt::global_mqtt_client->publish(this->control_current_command_topic_, payload, this->qos_, false);
+  this->control_current_ = value;
+}
+
 
 MaxCurrent::MaxCurrent() {}
 
@@ -155,12 +164,6 @@ void MaxCurrent::control(float value) {
   mqtt::global_mqtt_client->publish(this->parent_->max_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
 }
 
-
-ControlCurrent::ControlCurrent() {}
-
-void ControlCurrent::control(float value) {
-  mqtt::global_mqtt_client->publish(this->parent_->control_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
-}
 
 }  // namespace prism_wallbox
 }  // namespace esphome

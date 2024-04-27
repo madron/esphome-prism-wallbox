@@ -18,6 +18,7 @@ class PrismWallbox : public Component {
     bool power_meter_;
     float grid_power_;
     float voltage_;
+    float control_current_ = 32.0;
     std::string max_current_command_topic_;
     std::string control_current_command_topic_;
     std::string raw_state_;
@@ -27,7 +28,7 @@ class PrismWallbox : public Component {
     sensor::Sensor* voltage_sensor_;
     text_sensor::TextSensor* state_sensor_;
     number::Number* max_current_number_;
-    number::Number* control_current_number_;
+    sensor::Sensor* control_current_sensor_;
 
     float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }
@@ -39,27 +40,20 @@ class PrismWallbox : public Component {
     void set_voltage_sensor(sensor::Sensor *voltage_sensor) { voltage_sensor_ = voltage_sensor; }
     void set_state_sensor(text_sensor::TextSensor *state_sensor) { state_sensor_ = state_sensor; }
     void set_max_current_number(number::Number *max_current_number) { max_current_number_ = max_current_number; }
-    void set_control_current_number(number::Number *control_current_number) { control_current_number_ = control_current_number; }
+    void set_control_current_sensor(sensor::Sensor *control_current_sensor) { control_current_sensor_ = control_current_sensor; }
     void dump_config() override;
     void setup() override;
     void on_grid_power_change(float value);
     void on_voltage_change(float value);
     void on_raw_state_change(std::string value);
+    void set_control_current(float value);
+
 };
 
 
 class MaxCurrent : public number::Number, public Parented<PrismWallbox> {
   public:
     MaxCurrent();
-
-  protected:
-    void control(float value) override;
-};
-
-
-class ControlCurrent : public number::Number, public Parented<PrismWallbox> {
-  public:
-    ControlCurrent();
 
   protected:
     void control(float value) override;
