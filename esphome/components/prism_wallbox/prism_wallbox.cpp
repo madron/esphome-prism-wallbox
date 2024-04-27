@@ -15,7 +15,7 @@ void PrismWallbox::dump_config() {
 
 void PrismWallbox::setup() {
   this->max_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_user";
-  this->limit_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_limit";
+  this->control_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_limit";
   // power_meter_
   this->on_grid_power_change(NAN);
   if (this->power_meter_) {
@@ -72,18 +72,34 @@ void PrismWallbox::setup() {
     },
     this->qos_
   );
-  // max_current_sensor_
-  if (this->max_current_sensor_ != nullptr) {
+  // max_current_number_
+  if (this->max_current_number_ != nullptr) {
     mqtt::global_mqtt_client->subscribe(
       this->mqtt_prefix_ + "/" + this->port_ + "/user_amp",
       [this](const std::string &topic, const std::string &payload) {
         auto val = parse_number<float>(payload);
         if (!val.has_value()) {
           ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
-          this->max_current_sensor_->publish_state(NAN);
+          this->max_current_number_->publish_state(NAN);
           return;
         }
-        this->max_current_sensor_->publish_state(*val);
+        this->max_current_number_->publish_state(*val);
+      },
+      this->qos_
+    );
+  }
+  // control_current_number_
+  if (this->control_current_number_ != nullptr) {
+    mqtt::global_mqtt_client->subscribe(
+      this->control_current_command_topic_,
+      [this](const std::string &topic, const std::string &payload) {
+        auto val = parse_number<float>(payload);
+        if (!val.has_value()) {
+          ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
+          this->control_current_number_->publish_state(NAN);
+          return;
+        }
+        this->control_current_number_->publish_state(*val);
       },
       this->qos_
     );
@@ -140,11 +156,10 @@ void MaxCurrent::control(float value) {
 }
 
 
-LimitCurrent::LimitCurrent() {}
+ControlCurrent::ControlCurrent() {}
 
-void LimitCurrent::control(float value) {
-  mqtt::global_mqtt_client->publish(this->parent_->limit_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
-  this->publish_state(value);
+void ControlCurrent::control(float value) {
+  mqtt::global_mqtt_client->publish(this->parent_->control_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
 }
 
 }  // namespace prism_wallbox
