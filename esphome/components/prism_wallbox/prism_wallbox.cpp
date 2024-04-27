@@ -73,6 +73,14 @@ void PrismWallbox::setup() {
     },
     this->qos_
   );
+  // raw_mode
+  mqtt::global_mqtt_client->subscribe(
+    this->mqtt_prefix_ + "/" + this->port_ + "/mode",
+    [this](const std::string &topic, const std::string &payload) {
+      this->on_raw_mode_change(payload);
+    },
+    this->qos_
+  );
   // max_current_number_
   if (this->max_current_number_ != nullptr) {
     mqtt::global_mqtt_client->subscribe(
@@ -205,25 +213,49 @@ void PrismWallbox::on_raw_state_change(std::string value) {
   // 2 -> Waiting
   // 3 -> Charging
   // 4 -> Pause
-  std::string text_state;
   if (value == "1") {
-    text_state = "Unplugged";
+    this->text_state_ = "Unplugged";
   }
   else if (value == "2") {
-    text_state = "Waiting";
+    this->text_state_ = "Waiting";
   }
   else if (value == "3") {
-    text_state = "Charging";
+    this->text_state_ = "Charging";
   }
   else if (value == "4") {
-    text_state = "Pause";
+    this->text_state_ = "Pause";
   }
   else {
-    text_state = value;
+    this->text_state_ = value;
   }
-  this->text_state_ = text_state;
   if (this->state_sensor_ != nullptr) {
-    this->state_sensor_->publish_state(text_state);
+    this->state_sensor_->publish_state(this->text_state_);
+  }
+}
+
+void PrismWallbox::on_raw_mode_change(std::string value) {
+  this->raw_mode_ = value;
+  // 1 -> Solar
+  // 2 -> Normal
+  // 3 -> Pause
+  // 7 -> Low power
+  if (value == "1") {
+    this->raw_mode_text_ = "Solar";
+  }
+  else if (value == "2") {
+    this->raw_mode_text_ = "Normal";
+  }
+  else if (value == "3") {
+    this->raw_mode_text_ = "Pause";
+  }
+  else if (value == "7") {
+    this->raw_mode_text_ = "Low power";
+  }
+  else {
+    this->raw_mode_text_ = value;
+  }
+  if (this->mode_text_sensor_ != nullptr) {
+    this->mode_text_sensor_->publish_state(this->raw_mode_text_);
   }
 }
 

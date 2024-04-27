@@ -15,6 +15,7 @@ CONF_CONTROL_CURRENT = 'control_current'
 CONF_SESSION_ENERGY = 'session_energy'
 CONF_TOTAL_ENERGY = 'total_energy'
 CONF_SESSION_TIME = 'session_time'
+CONF_MODE_TEXT = 'mode_text'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 ICON_EV_PLUG = 'mdi:ev-plug-type2'
 ICON_CLOCK = 'mdi:clock-time-eight-outline'
@@ -100,6 +101,8 @@ CONFIG_SCHEMA = cv.Schema(
             state_class=STATE_CLASS_TOTAL_INCREASING,
             device_class=DEVICE_CLASS_DURATION,
         ),
+        cv.Optional(CONF_MODE_TEXT): text_sensor.text_sensor_schema(
+        ),
     }
 )
 
@@ -156,3 +159,7 @@ async def to_code(config):
         conf = config[CONF_SESSION_TIME]
         entity = await sensor.new_sensor(conf)
         cg.add(var.set_session_time_sensor(entity))
+    if CONF_MODE_TEXT in config:
+        conf = config[CONF_MODE_TEXT]
+        entity = await text_sensor.new_text_sensor(conf)
+        cg.add(var.set_mode_text_sensor(entity))
