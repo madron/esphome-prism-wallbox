@@ -35,6 +35,7 @@ class PrismWallbox : public Component {
     sensor::Sensor* total_energy_sensor_;
     sensor::Sensor* power_sensor_;
     sensor::Sensor* current_sensor_;
+    sensor::Sensor* session_time_sensor_;
 
     float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }
@@ -51,6 +52,7 @@ class PrismWallbox : public Component {
     void set_total_energy_sensor(sensor::Sensor *total_energy_sensor) { total_energy_sensor_ = total_energy_sensor; }
     void set_power_sensor(sensor::Sensor *power_sensor) { power_sensor_ = power_sensor; }
     void set_current_sensor(sensor::Sensor *current_sensor) { current_sensor_ = current_sensor; }
+    void set_session_time_sensor(sensor::Sensor *session_time_sensor) { session_time_sensor_ = session_time_sensor; }
     void dump_config() override;
     void setup() override;
     void on_grid_power_change(float value);

@@ -2,8 +2,8 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import number, sensor, text_sensor
 from esphome.const import CONF_CURRENT, CONF_ID, CONF_MAX_CURRENT, CONF_PORT, CONF_POWER, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
-from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
-from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_ENERGY, DEVICE_CLASS_ENERGY_STORAGE, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
+from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_SECOND, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
+from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_DURATION, DEVICE_CLASS_ENERGY, DEVICE_CLASS_ENERGY_STORAGE, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
 from esphome.const import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL_INCREASING
 
 AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'mqtt']
@@ -14,8 +14,10 @@ CONF_POWER_METER = 'power_meter'
 CONF_CONTROL_CURRENT = 'control_current'
 CONF_SESSION_ENERGY = 'session_energy'
 CONF_TOTAL_ENERGY = 'total_energy'
+CONF_SESSION_TIME = 'session_time'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 ICON_EV_PLUG = 'mdi:ev-plug-type2'
+ICON_CLOCK = 'mdi:clock-time-eight-outline'
 
 MAX_CURRENT_MIN = 6
 MAX_CURRENT_MAX = 32
@@ -91,6 +93,13 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_SESSION_TIME): sensor.sensor_schema(
+            unit_of_measurement=UNIT_SECOND,
+            icon=ICON_CLOCK,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=DEVICE_CLASS_DURATION,
+        ),
     }
 )
 
@@ -143,3 +152,7 @@ async def to_code(config):
         conf = config[CONF_CURRENT]
         entity = await sensor.new_sensor(conf)
         cg.add(var.set_current_sensor(entity))
+    if CONF_SESSION_TIME in config:
+        conf = config[CONF_SESSION_TIME]
+        entity = await sensor.new_sensor(conf)
+        cg.add(var.set_session_time_sensor(entity))
