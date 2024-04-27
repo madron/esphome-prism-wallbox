@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import number, sensor, text_sensor
-from esphome.const import CONF_ID, CONF_MAX_CURRENT, CONF_PORT, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
+from esphome.const import CONF_ID, CONF_MAX_CURRENT, CONF_PORT, CONF_POWER, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
 from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
 from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_ENERGY, DEVICE_CLASS_ENERGY_STORAGE, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
 from esphome.const import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL_INCREASING
@@ -79,6 +79,12 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_ENERGY,
             state_class=STATE_CLASS_TOTAL_INCREASING,
         ),
+        cv.Optional(CONF_POWER): sensor.sensor_schema(
+            unit_of_measurement=UNIT_WATT,
+            accuracy_decimals=0,
+            device_class=DEVICE_CLASS_POWER,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
     }
 )
 
@@ -123,3 +129,7 @@ async def to_code(config):
         conf = config[CONF_TOTAL_ENERGY]
         entity = await sensor.new_sensor(conf)
         cg.add(var.set_total_energy_sensor(entity))
+    if CONF_POWER in config:
+        conf = config[CONF_POWER]
+        entity = await sensor.new_sensor(conf)
+        cg.add(var.set_power_sensor(entity))
