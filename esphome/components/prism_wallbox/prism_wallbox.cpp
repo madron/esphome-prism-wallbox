@@ -105,6 +105,38 @@ void PrismWallbox::setup() {
       this->qos_
     );
   }
+  // session_energy_sensor_
+  if (this->session_energy_sensor_ != nullptr) {
+    mqtt::global_mqtt_client->subscribe(
+      this->mqtt_prefix_ + "/" + this->port_ + "/wh",
+      [this](const std::string &topic, const std::string &payload) {
+        auto val = parse_number<float>(payload);
+        if (!val.has_value()) {
+          ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
+          this->session_energy_sensor_->publish_state(NAN);
+          return;
+        }
+        this->session_energy_sensor_->publish_state(*val);
+      },
+      this->qos_
+    );
+  }
+  // total_energy_sensor_
+  if (this->total_energy_sensor_ != nullptr) {
+    mqtt::global_mqtt_client->subscribe(
+      this->mqtt_prefix_ + "/" + this->port_ + "/wh_total",
+      [this](const std::string &topic, const std::string &payload) {
+        auto val = parse_number<float>(payload);
+        if (!val.has_value()) {
+          ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
+          this->total_energy_sensor_->publish_state(NAN);
+          return;
+        }
+        this->total_energy_sensor_->publish_state(*val);
+      },
+      this->qos_
+    );
+  }
 }
 
 void PrismWallbox::on_grid_power_change(float value) {

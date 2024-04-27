@@ -1,10 +1,10 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import number, sensor, text_sensor
-from esphome.const import CONF_ID, CONF_MAX_CURRENT, CONF_MODE, CONF_PORT, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
-from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT
-from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
-from esphome.const import STATE_CLASS_MEASUREMENT
+from esphome.const import CONF_ID, CONF_MAX_CURRENT, CONF_PORT, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
+from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
+from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_ENERGY, DEVICE_CLASS_ENERGY_STORAGE, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
+from esphome.const import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL_INCREASING
 
 AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'mqtt']
 
@@ -12,6 +12,8 @@ CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
 CONF_POWER_METER = 'power_meter'
 CONF_CONTROL_CURRENT = 'control_current'
+CONF_SESSION_ENERGY = 'session_energy'
+CONF_TOTAL_ENERGY = 'total_energy'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 ICON_EV_PLUG = 'mdi:ev-plug-type2'
 
@@ -23,7 +25,6 @@ MAX_CURRENT_STEP = 1
 prism_wallbox_ns = cg.esphome_ns.namespace('prism_wallbox')
 PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
 MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
-ControlCurrent = prism_wallbox_ns.class_('ControlCurrent', number.Number)
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -66,6 +67,18 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_SESSION_ENERGY): sensor.sensor_schema(
+            unit_of_measurement=UNIT_WATT_HOURS,
+            accuracy_decimals=0,
+            device_class=DEVICE_CLASS_ENERGY_STORAGE,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
+        cv.Optional(CONF_TOTAL_ENERGY): sensor.sensor_schema(
+            unit_of_measurement=UNIT_WATT_HOURS,
+            accuracy_decimals=0,
+            device_class=DEVICE_CLASS_ENERGY,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+        ),
     }
 )
 
@@ -102,3 +115,11 @@ async def to_code(config):
         conf = config[CONF_CONTROL_CURRENT]
         entity = await sensor.new_sensor(conf)
         cg.add(var.set_control_current_sensor(entity))
+    if CONF_SESSION_ENERGY in config:
+        conf = config[CONF_SESSION_ENERGY]
+        entity = await sensor.new_sensor(conf)
+        cg.add(var.set_session_energy_sensor(entity))
+    if CONF_TOTAL_ENERGY in config:
+        conf = config[CONF_TOTAL_ENERGY]
+        entity = await sensor.new_sensor(conf)
+        cg.add(var.set_total_energy_sensor(entity))
