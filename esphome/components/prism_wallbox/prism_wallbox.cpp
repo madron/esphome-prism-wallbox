@@ -138,7 +138,7 @@ void PrismWallbox::setup() {
     );
   }
   // power
-  this->on_power_change(NAN);
+  this->on_power_change(0.0);
   mqtt::global_mqtt_client->subscribe(
     this->mqtt_prefix_ + "/" + this->port_ + "/w",
     [this](const std::string &topic, const std::string &payload) {
@@ -149,6 +149,21 @@ void PrismWallbox::setup() {
         return;
       }
       this->on_power_change(*val);
+    },
+    this->qos_
+  );
+  // current
+  this->on_current_change(0.0);
+  mqtt::global_mqtt_client->subscribe(
+    this->mqtt_prefix_ + "/" + this->port_ + "/amp",
+    [this](const std::string &topic, const std::string &payload) {
+      auto val = parse_number<float>(payload);
+      if (!val.has_value()) {
+        ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
+        this->on_current_change(NAN);
+        return;
+      }
+      this->on_current_change(*val);
     },
     this->qos_
   );
@@ -208,6 +223,13 @@ void PrismWallbox::on_power_change(float value) {
   this->power_ = value;
   if (this->power_sensor_ != nullptr) {
         this->power_sensor_->publish_state(value);
+  }
+}
+
+void PrismWallbox::on_current_change(float value) {
+  this->current_ = value;
+  if (this->current_sensor_ != nullptr) {
+        this->current_sensor_->publish_state(value);
   }
 }
 
