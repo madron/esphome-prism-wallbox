@@ -17,11 +17,10 @@ void PrismWallbox::dump_config() {
 }
 
 void PrismWallbox::setup() {
-  this->mode_ = "Normal";
   this->max_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_user";
   this->control_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_limit";
   this->mode_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_mode";
-  this->set_mode("Normal");
+  this->set_mode(this->mode_default_);
   if (this->solar_delta_power_number_ != nullptr) {
     this->solar_delta_power_number_->publish_state(this->solar_delta_power_);
   }
@@ -326,6 +325,12 @@ void PrismWallbox::search_phases() {
       this->set_phases(this->phases_);
     }
   }
+}
+
+void PrismWallbox::set_mode_default(std::string value) {
+  if (value == "solar") this->mode_default_ = "Solar";
+  else if (value == "normal") this->mode_default_ = "Normal";
+  else if (value == "pause") this->mode_default_ = "Pause";
 }
 
 void PrismWallbox::set_mode(std::string value) {

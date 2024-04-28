@@ -38,6 +38,7 @@ class PrismWallbox : public Component {
     std::string prism_state_ = "";
     std::string prism_mode_ = "";
     std::string mode_ = "";
+    std::string mode_default_ = "";
     // Entities
     sensor::Sensor* power_grid_sensor_;
     sensor::Sensor* temperature_sensor_;
@@ -72,6 +73,7 @@ class PrismWallbox : public Component {
     void set_current_sensor(sensor::Sensor *current_sensor) { current_sensor_ = current_sensor; }
     void set_session_time_sensor(sensor::Sensor *session_time_sensor) { session_time_sensor_ = session_time_sensor; }
     void set_mode_text_sensor(text_sensor::TextSensor *mode_text_sensor) { mode_text_sensor_ = mode_text_sensor; }
+    void set_mode_default(std::string value);
     void set_mode_select(select::Select *mode_select) { mode_select_ = mode_select; }
     void set_phases_sensor(sensor::Sensor *phases_sensor) { phases_sensor_ = phases_sensor; }
     void set_solar_delta_power_default(float  default_value) { solar_delta_power_ = default_value; }

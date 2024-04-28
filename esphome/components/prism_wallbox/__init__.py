@@ -16,6 +16,7 @@ CONF_SESSION_ENERGY = 'session_energy'
 CONF_TOTAL_ENERGY = 'total_energy'
 CONF_SESSION_TIME = 'session_time'
 CONF_PHASES = 'phases'
+CONF_MODE_DEFAULT = 'mode_default'
 CONF_MODE_TEXT = 'mode_text'
 CONF_SOLAR_DELTA_POWER = 'solar_delta_power'
 CONF_SOLAR_DELTA_POWER_DEFAULT = 'solar_delta_power_default'
@@ -117,6 +118,7 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_MODE_TEXT): text_sensor.text_sensor_schema(
         ),
+        cv.Optional(CONF_MODE_DEFAULT, default='Normal'): cv.one_of('normal', 'solar', 'pause', lower=True),
         cv.Optional(CONF_MODE): select.select_schema(
             Mode,
         ),
@@ -191,6 +193,9 @@ async def to_code(config):
         conf = config[CONF_MODE_TEXT]
         entity = await text_sensor.new_text_sensor(conf)
         cg.add(var.set_mode_text_sensor(entity))
+    if CONF_MODE_DEFAULT in config:
+        conf = config[CONF_MODE_DEFAULT]
+        cg.add(var.set_mode_default(conf))
     if CONF_MODE in config:
         conf = config[CONF_MODE]
         entity = await select.new_select(conf, options=MODE_OPTIONS)
