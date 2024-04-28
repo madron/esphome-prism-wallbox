@@ -13,23 +13,24 @@ namespace prism_wallbox {
 
 class PrismWallbox : public Component {
   public:
+    // Config
     std::string mqtt_prefix_;
     std::string port_;
     uint8_t qos_;
     bool power_meter_;
-    float grid_power_;
-    float voltage_;
-    float control_current_ = 32.0;
-    float power_;
-    float current_;
     std::string max_current_command_topic_;
     std::string control_current_command_topic_;
     std::string mode_command_topic_;
-    std::string raw_state_;
-    std::string text_state_;
-    std::string mode_;
-    std::string raw_mode_;
-    std::string raw_mode_text_;
+    // Variable
+    float grid_power_ = 0;
+    float voltage_ = 0;
+    float control_current_ = 32.0;
+    float power_ = 0;
+    float current_ = 0;
+    std::string prism_state_ = "";
+    std::string prism_mode_ = "";
+    std::string mode_ = "";
+    // Entities
     sensor::Sensor* power_grid_sensor_;
     sensor::Sensor* temperature_sensor_;
     sensor::Sensor* voltage_sensor_;
@@ -66,13 +67,14 @@ class PrismWallbox : public Component {
     void setup() override;
     void on_grid_power_change(float value);
     void on_voltage_change(float value);
-    void on_raw_state_change(std::string value);
-    void on_raw_mode_change(std::string value);
+    void on_prism_state_change(std::string value);
+    void on_prism_mode_change(std::string value);
     void set_control_current(float value);
     void on_power_change(float value);
     void on_current_change(float value);
     void set_mode(std::string value);
     void set_prism_mode(std::string value);
+    void update_settings();
 };
 
 
