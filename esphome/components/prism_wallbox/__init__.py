@@ -11,7 +11,7 @@ AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'select', 'mqtt']
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
 CONF_POWER_METER = 'power_meter'
-CONF_CONTROL_CURRENT = 'control_current'
+CONF_CURRENT_CONTROL = 'current_control'
 CONF_SESSION_ENERGY = 'session_energy'
 CONF_TOTAL_ENERGY = 'total_energy'
 CONF_SESSION_TIME = 'session_time'
@@ -79,7 +79,7 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_AMPERE,
             device_class=DEVICE_CLASS_CURRENT,
         ),
-        cv.Optional(CONF_CONTROL_CURRENT): sensor.sensor_schema(
+        cv.Optional(CONF_CURRENT_CONTROL): sensor.sensor_schema(
             unit_of_measurement=UNIT_AMPERE,
             accuracy_decimals=1,
             device_class=DEVICE_CLASS_CURRENT,
@@ -165,10 +165,10 @@ async def to_code(config):
         entity = await number.new_number(conf, min_value=MAX_CURRENT_MIN, max_value=MAX_CURRENT_MAX, step=MAX_CURRENT_STEP)
         await cg.register_parented(entity, config[CONF_ID])
         cg.add(var.set_max_current_number(entity))
-    if CONF_CONTROL_CURRENT in config:
-        conf = config[CONF_CONTROL_CURRENT]
+    if CONF_CURRENT_CONTROL in config:
+        conf = config[CONF_CURRENT_CONTROL]
         entity = await sensor.new_sensor(conf)
-        cg.add(var.set_control_current_sensor(entity))
+        cg.add(var.set_current_control_sensor(entity))
     if CONF_SESSION_ENERGY in config:
         conf = config[CONF_SESSION_ENERGY]
         entity = await sensor.new_sensor(conf)

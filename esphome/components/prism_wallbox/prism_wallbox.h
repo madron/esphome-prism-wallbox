@@ -25,12 +25,12 @@ class PrismWallbox : public Component {
     uint8_t phases_ = 0;
     bool power_meter_;
     std::string max_current_command_topic_;
-    std::string control_current_command_topic_;
+    std::string current_control_command_topic_;
     std::string mode_command_topic_;
     // Variable
     float grid_power_ = 0;
     float voltage_ = 0;
-    float control_current_ = MAX_CURRENT;
+    float current_control_ = MAX_CURRENT;
     float power_ = 0;
     float current_ = 0;
     float power_current_ratio_ = 0;
@@ -45,7 +45,7 @@ class PrismWallbox : public Component {
     sensor::Sensor* voltage_sensor_;
     text_sensor::TextSensor* state_sensor_;
     number::Number* max_current_number_;
-    sensor::Sensor* control_current_sensor_;
+    sensor::Sensor* current_control_sensor_;
     sensor::Sensor* session_energy_sensor_;
     sensor::Sensor* total_energy_sensor_;
     sensor::Sensor* power_sensor_;
@@ -66,7 +66,7 @@ class PrismWallbox : public Component {
     void set_voltage_sensor(sensor::Sensor *voltage_sensor) { voltage_sensor_ = voltage_sensor; }
     void set_state_sensor(text_sensor::TextSensor *state_sensor) { state_sensor_ = state_sensor; }
     void set_max_current_number(number::Number *max_current_number) { max_current_number_ = max_current_number; }
-    void set_control_current_sensor(sensor::Sensor *control_current_sensor) { control_current_sensor_ = control_current_sensor; }
+    void set_current_control_sensor(sensor::Sensor *current_control_sensor) { current_control_sensor_ = current_control_sensor; }
     void set_session_energy_sensor(sensor::Sensor *session_energy_sensor) { session_energy_sensor_ = session_energy_sensor; }
     void set_total_energy_sensor(sensor::Sensor *total_energy_sensor) { total_energy_sensor_ = total_energy_sensor; }
     void set_power_sensor(sensor::Sensor *power_sensor) { power_sensor_ = power_sensor; }
@@ -84,7 +84,7 @@ class PrismWallbox : public Component {
     void on_voltage_change(float value);
     void on_prism_state_change(std::string value);
     void on_prism_mode_change(std::string value);
-    void set_control_current(float value);
+    void set_current_control(float value);
     void on_power_change(float value);
     void on_current_change(float value);
     void set_mode(std::string value);
