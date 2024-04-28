@@ -10,10 +10,10 @@
 namespace esphome {
 namespace prism_wallbox {
 
-static const float const MIN_VOLTAGE = 200.0;
-static const float const MIN_CURRENT = 6.0;
-static const float const MAX_CURRENT = 32.0;
-static const float const MIN_POWER = 1200.0;
+static const float MIN_VOLTAGE = 190.0;
+static const float MIN_CURRENT = 6.0;
+static const float MAX_CURRENT = 32.0;
+static const float MIN_POWER = MIN_VOLTAGE * MIN_CURRENT;
 
 
 class PrismWallbox : public Component {
