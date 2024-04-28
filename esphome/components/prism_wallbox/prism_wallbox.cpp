@@ -15,8 +15,10 @@ void PrismWallbox::dump_config() {
 }
 
 void PrismWallbox::setup() {
+  this->mode_ = "Normal";
   this->max_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_user";
   this->control_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_limit";
+  this->mode_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_mode";
   // power_meter_
   this->on_grid_power_change(NAN);
   if (this->power_meter_) {
@@ -281,10 +283,49 @@ void PrismWallbox::on_current_change(float value) {
   }
 }
 
+void PrismWallbox::set_mode(std::string value) {
+  this->mode_ = value;
+  if (value == "Solar") {
+    this->set_prism_mode("Normal");
+  }
+  else if (value == "Normal") {
+    this->set_prism_mode("Normal");
+    this->set_control_current(32);
+  }
+  else if (value == "Pause") {
+    this->set_prism_mode("Pause");
+  }
+}
+
+
+void PrismWallbox::set_prism_mode(std::string value) {
+  std::string payload;
+  if (value == "Solar") {
+    payload = "1";
+  }
+  else if (value == "Normal") {
+    payload = "2";
+  }
+  else if (value == "Pause") {
+    payload = "3";
+  }
+  else {
+    payload = value;
+  }
+  mqtt::global_mqtt_client->publish(this->mode_command_topic_, payload, this->qos_, false);
+}
+
 
 MaxCurrent::MaxCurrent() {}
 void MaxCurrent::control(float value) {
   mqtt::global_mqtt_client->publish(this->parent_->max_current_command_topic_, std::to_string(value), this->parent_->qos_, false);
+}
+
+
+Mode::Mode() {}
+void Mode::control(const std::string &value) {
+  this->publish_state(value);
+  this->parent_->set_mode(value);
 }
 
 

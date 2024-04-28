@@ -1,12 +1,12 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
-from esphome.components import number, sensor, text_sensor
-from esphome.const import CONF_CURRENT, CONF_ID, CONF_MAX_CURRENT, CONF_PORT, CONF_POWER, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
+from esphome.components import number, sensor, select, text_sensor
+from esphome.const import CONF_CURRENT, CONF_ID, CONF_MAX_CURRENT, CONF_MODE, CONF_PORT, CONF_POWER, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
 from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_SECOND, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
 from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_DURATION, DEVICE_CLASS_ENERGY, DEVICE_CLASS_ENERGY_STORAGE, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
 from esphome.const import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL_INCREASING
 
-AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'mqtt']
+AUTO_LOAD = ['sensor', 'text_sensor', 'number', 'select', 'mqtt']
 
 CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
@@ -24,10 +24,17 @@ MAX_CURRENT_MIN = 6
 MAX_CURRENT_MAX = 32
 MAX_CURRENT_STEP = 1
 
+MODE_OPTIONS = [
+    'Normal',
+    'Solar',
+    'Pause',
+]
+
 
 prism_wallbox_ns = cg.esphome_ns.namespace('prism_wallbox')
 PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
 MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
+Mode = prism_wallbox_ns.class_('Mode', select.Select)
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -103,6 +110,9 @@ CONFIG_SCHEMA = cv.Schema(
         ),
         cv.Optional(CONF_MODE_TEXT): text_sensor.text_sensor_schema(
         ),
+        cv.Optional(CONF_MODE): select.select_schema(
+            Mode,
+        ),
     }
 )
 
@@ -163,3 +173,8 @@ async def to_code(config):
         conf = config[CONF_MODE_TEXT]
         entity = await text_sensor.new_text_sensor(conf)
         cg.add(var.set_mode_text_sensor(entity))
+    if CONF_MODE in config:
+        conf = config[CONF_MODE]
+        entity = await select.new_select(conf, options=MODE_OPTIONS)
+        await cg.register_parented(entity, config[CONF_ID])
+        cg.add(var.set_mode_select(entity))

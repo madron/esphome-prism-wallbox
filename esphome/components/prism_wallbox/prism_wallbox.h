@@ -2,6 +2,7 @@
 
 #include "esphome/core/component.h"
 #include "esphome/components/number/number.h"
+#include "esphome/components/select/select.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/text_sensor/text_sensor.h"
 #include "esphome/components/mqtt/mqtt_client.h"
@@ -23,8 +24,10 @@ class PrismWallbox : public Component {
     float current_;
     std::string max_current_command_topic_;
     std::string control_current_command_topic_;
+    std::string mode_command_topic_;
     std::string raw_state_;
     std::string text_state_;
+    std::string mode_;
     std::string raw_mode_;
     std::string raw_mode_text_;
     sensor::Sensor* power_grid_sensor_;
@@ -39,6 +42,7 @@ class PrismWallbox : public Component {
     sensor::Sensor* current_sensor_;
     sensor::Sensor* session_time_sensor_;
     text_sensor::TextSensor* mode_text_sensor_;
+    select::Select* mode_select_;
 
     float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }
@@ -57,6 +61,7 @@ class PrismWallbox : public Component {
     void set_current_sensor(sensor::Sensor *current_sensor) { current_sensor_ = current_sensor; }
     void set_session_time_sensor(sensor::Sensor *session_time_sensor) { session_time_sensor_ = session_time_sensor; }
     void set_mode_text_sensor(text_sensor::TextSensor *mode_text_sensor) { mode_text_sensor_ = mode_text_sensor; }
+    void set_mode_select(select::Select *mode_select) { mode_select_ = mode_select; }
     void dump_config() override;
     void setup() override;
     void on_grid_power_change(float value);
@@ -66,6 +71,8 @@ class PrismWallbox : public Component {
     void set_control_current(float value);
     void on_power_change(float value);
     void on_current_change(float value);
+    void set_mode(std::string value);
+    void set_prism_mode(std::string value);
 };
 
 
@@ -75,6 +82,15 @@ class MaxCurrent : public number::Number, public Parented<PrismWallbox> {
 
   protected:
     void control(float value) override;
+};
+
+
+class Mode : public select::Select, public Parented<PrismWallbox> {
+  public:
+    Mode();
+
+  protected:
+    void control(const std::string &value) override;
 };
 
 
