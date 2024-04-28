@@ -272,11 +272,24 @@ void PrismWallbox::on_prism_mode_change(std::string value) {
 }
 
 void PrismWallbox::set_control_current(float value) {
+  if (value < MIN_CURRENT && this->control_current_ >= MIN_CURRENT) {
+    this->control_current_ = MIN_CURRENT;
+    this->set_prism_mode("Pause");
+  }
+  else if (value >= MIN_CURRENT && this->control_current_ < MIN_CURRENT) {
+    this->control_current_ = value;
+    this->set_prism_mode("Normal");
+  }
+  else {
+    this->control_current_ = value;
+  }
+  if (value > MAX_CURRENT) {
+    this->control_current_ = MAX_CURRENT;
+  }
   char buffer[4];
-  std::snprintf(buffer, 4, "%.1f", value);
+  std::snprintf(buffer, 4, "%.1f", this->control_current_);
   std::string payload(buffer);
   mqtt::global_mqtt_client->publish(this->control_current_command_topic_, payload, this->qos_, false);
-  this->control_current_ = value;
 }
 
 void PrismWallbox::set_phases(uint8_t value) {
