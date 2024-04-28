@@ -33,6 +33,7 @@ class PrismWallbox : public Component {
     float control_current_ = MAX_CURRENT;
     float power_ = 0;
     float current_ = 0;
+    float power_current_ratio_ = 0;
     std::string prism_state_ = "";
     std::string prism_mode_ = "";
     std::string mode_ = "";

@@ -279,15 +279,21 @@ void PrismWallbox::set_control_current(float value) {
 
 void PrismWallbox::set_phases(uint8_t value) {
   this->phases_ = value;
+  this->power_current_ratio_ = this->phases_ * this->voltage_;
   if (this->phases_sensor_ != nullptr) {
-    if (this->phases_ == 0) this->phases_sensor_->publish_state(NAN);
-    else this->phases_sensor_->publish_state(this->phases_);
+    if (this->phases_ == 0) {
+      this->phases_sensor_->publish_state(NAN);
+    }
+    else {
+      this->phases_sensor_->publish_state(this->phases_);
+    }
   }
 }
 
 void PrismWallbox::on_voltage_change(float value) {
   this->voltage_ = value;
   this->search_phases();
+  this->power_current_ratio_ = this->phases_ * this->voltage_;
   if (this->voltage_sensor_ != nullptr) {
         this->voltage_sensor_->publish_state(value);
   }
