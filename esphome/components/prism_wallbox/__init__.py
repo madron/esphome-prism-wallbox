@@ -17,6 +17,8 @@ CONF_TOTAL_ENERGY = 'total_energy'
 CONF_SESSION_TIME = 'session_time'
 CONF_PHASES = 'phases'
 CONF_MODE_TEXT = 'mode_text'
+CONF_SOLAR_DELTA_POWER = 'solar_delta_power'
+CONF_SOLAR_DELTA_POWER_DEFAULT = 'solar_delta_power_default'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 ICON_EV_PLUG = 'mdi:ev-plug-type2'
 ICON_CLOCK = 'mdi:clock-time-eight-outline'
@@ -24,6 +26,9 @@ ICON_CLOCK = 'mdi:clock-time-eight-outline'
 MAX_CURRENT_MIN = 6
 MAX_CURRENT_MAX = 32
 MAX_CURRENT_STEP = 1
+SOLAR_DELTA_POWER_MIN = 0
+SOLAR_DELTA_POWER_MAX = 500
+SOLAR_DELTA_POWER_STEP = 50
 
 MODE_OPTIONS = [
     'Normal',
@@ -36,6 +41,7 @@ prism_wallbox_ns = cg.esphome_ns.namespace('prism_wallbox')
 PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
 MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
 Mode = prism_wallbox_ns.class_('Mode', select.Select)
+SolarDeltaPower = prism_wallbox_ns.class_('SolarDeltaPower', number.Number)
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -119,6 +125,12 @@ CONFIG_SCHEMA = cv.Schema(
             accuracy_decimals=0,
             state_class=STATE_CLASS_MEASUREMENT,
         ),
+        cv.Optional(CONF_SOLAR_DELTA_POWER_DEFAULT, default=0): cv.float_range(min=SOLAR_DELTA_POWER_MIN, max=SOLAR_DELTA_POWER_MAX),
+        cv.Optional(CONF_SOLAR_DELTA_POWER): number.number_schema(
+            SolarDeltaPower,
+            unit_of_measurement=UNIT_WATT,
+            device_class=DEVICE_CLASS_POWER,
+        ),
     }
 )
 
@@ -188,4 +200,11 @@ async def to_code(config):
         conf = config[CONF_PHASES]
         entity = await sensor.new_sensor(conf)
         cg.add(var.set_phases_sensor(entity))
-
+    if CONF_SOLAR_DELTA_POWER_DEFAULT in config:
+        conf = config[CONF_SOLAR_DELTA_POWER_DEFAULT]
+        cg.add(var.set_solar_delta_power_default(conf))
+    if CONF_SOLAR_DELTA_POWER in config:
+        conf = config[CONF_SOLAR_DELTA_POWER]
+        entity = await number.new_number(conf, min_value=SOLAR_DELTA_POWER_MIN, max_value=SOLAR_DELTA_POWER_MAX, step=SOLAR_DELTA_POWER_STEP)
+        await cg.register_parented(entity, config[CONF_ID])
+        cg.add(var.set_solar_delta_power_number(entity))

@@ -22,6 +22,9 @@ void PrismWallbox::setup() {
   this->control_current_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_current_limit";
   this->mode_command_topic_ = this->mqtt_prefix_ + "/" + this->port_ + "/command/set_mode";
   this->set_mode("Normal");
+  if (this->solar_delta_power_number_ != nullptr) {
+    this->solar_delta_power_number_->publish_state(this->solar_delta_power_);
+  }
   // power_meter_
   if (this->power_meter_) {
     mqtt::global_mqtt_client->subscribe(
@@ -387,6 +390,12 @@ void MaxCurrent::control(float value) {
 Mode::Mode() {}
 void Mode::control(const std::string &value) {
   this->parent_->set_mode(value);
+}
+
+
+SolarDeltaPower::SolarDeltaPower() {}
+void SolarDeltaPower::control(float value) {
+  this->parent_->solar_delta_power_ = value;
 }
 
 
