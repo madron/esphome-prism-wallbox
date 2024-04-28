@@ -414,5 +414,15 @@ void SolarDeltaPower::control(float value) {
 }
 
 
+PowerControl::PowerControl() {}
+void PowerControl::control(float value) {
+}
+
+
+PowerControlModifier::PowerControlModifier() {}
+void PowerControlModifier::control(float value) {
+}
+
+
 }  // namespace prism_wallbox
 }  // namespace esphome

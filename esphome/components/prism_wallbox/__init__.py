@@ -12,6 +12,8 @@ CONF_MQTT_PREFIX = 'mqtt_prefix'
 CONF_POWER_GRID = 'power_grid'
 CONF_POWER_METER = 'power_meter'
 CONF_CURRENT_CONTROL = 'current_control'
+CONF_POWER_CONTROL = 'power_control'
+CONF_POWER_CONTROL_MODIFIER = 'power_control_modifier'
 CONF_SESSION_ENERGY = 'session_energy'
 CONF_TOTAL_ENERGY = 'total_energy'
 CONF_SESSION_TIME = 'session_time'
@@ -30,6 +32,9 @@ MAX_CURRENT_STEP = 1
 SOLAR_DELTA_POWER_MIN = 0
 SOLAR_DELTA_POWER_MAX = 500
 SOLAR_DELTA_POWER_STEP = 50
+POWER_CONTROL_MIN = 0
+POWER_CONTROL_MAX = 22000
+POWER_CONTROL_STEP = 1
 
 MODE_OPTIONS = [
     'Normal',
@@ -43,6 +48,8 @@ PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
 MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
 Mode = prism_wallbox_ns.class_('Mode', select.Select)
 SolarDeltaPower = prism_wallbox_ns.class_('SolarDeltaPower', number.Number)
+PowerControl = prism_wallbox_ns.class_('PowerControl', number.Number)
+PowerControlModifier = prism_wallbox_ns.class_('PowerControlModifier', number.Number)
 
 
 CONFIG_SCHEMA = cv.Schema(
@@ -84,6 +91,16 @@ CONFIG_SCHEMA = cv.Schema(
             accuracy_decimals=1,
             device_class=DEVICE_CLASS_CURRENT,
             state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional(CONF_POWER_CONTROL): number.number_schema(
+            PowerControl,
+            unit_of_measurement=UNIT_WATT,
+            device_class=DEVICE_CLASS_POWER,
+        ),
+        cv.Optional(CONF_POWER_CONTROL_MODIFIER): number.number_schema(
+            PowerControlModifier,
+            unit_of_measurement=UNIT_WATT,
+            device_class=DEVICE_CLASS_POWER,
         ),
         cv.Optional(CONF_SESSION_ENERGY): sensor.sensor_schema(
             unit_of_measurement=UNIT_WATT_HOURS,
@@ -169,6 +186,16 @@ async def to_code(config):
         conf = config[CONF_CURRENT_CONTROL]
         entity = await sensor.new_sensor(conf)
         cg.add(var.set_current_control_sensor(entity))
+    if CONF_POWER_CONTROL in config:
+        conf = config[CONF_POWER_CONTROL]
+        entity = await number.new_number(conf, min_value=POWER_CONTROL_MIN, max_value=POWER_CONTROL_MAX, step=POWER_CONTROL_STEP)
+        await cg.register_parented(entity, config[CONF_ID])
+        cg.add(var.set_power_control_number(entity))
+    if CONF_POWER_CONTROL_MODIFIER in config:
+        conf = config[CONF_POWER_CONTROL_MODIFIER]
+        entity = await number.new_number(conf, min_value=-POWER_CONTROL_MAX, max_value=POWER_CONTROL_MAX, step=POWER_CONTROL_STEP)
+        await cg.register_parented(entity, config[CONF_ID])
+        cg.add(var.set_power_control_modifier_number(entity))
     if CONF_SESSION_ENERGY in config:
         conf = config[CONF_SESSION_ENERGY]
         entity = await sensor.new_sensor(conf)

@@ -55,6 +55,8 @@ class PrismWallbox : public Component {
     select::Select* mode_select_;
     sensor::Sensor* phases_sensor_;
     number::Number* solar_delta_power_number_;
+    number::Number* power_control_number_;
+    number::Number* power_control_modifier_number_;
 
     float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }
@@ -78,6 +80,8 @@ class PrismWallbox : public Component {
     void set_phases_sensor(sensor::Sensor *phases_sensor) { phases_sensor_ = phases_sensor; }
     void set_solar_delta_power_default(float  default_value) { solar_delta_power_ = default_value; }
     void set_solar_delta_power_number(number::Number *solar_delta_power_number) { solar_delta_power_number_ = solar_delta_power_number; }
+    void set_power_control_number(number::Number *power_control_number) { power_control_number_ = power_control_number; }
+    void set_power_control_modifier_number(number::Number *power_control_modifier_number) { power_control_modifier_number_ = power_control_modifier_number; }
     void dump_config() override;
     void setup() override;
     void on_grid_power_change(float value);
@@ -116,6 +120,24 @@ class Mode : public select::Select, public Parented<PrismWallbox> {
 class SolarDeltaPower : public number::Number, public Parented<PrismWallbox> {
   public:
     SolarDeltaPower();
+
+  protected:
+    void control(float value) override;
+};
+
+
+class PowerControl : public number::Number, public Parented<PrismWallbox> {
+  public:
+    PowerControl();
+
+  protected:
+    void control(float value) override;
+};
+
+
+class PowerControlModifier : public number::Number, public Parented<PrismWallbox> {
+  public:
+    PowerControlModifier();
 
   protected:
     void control(float value) override;
