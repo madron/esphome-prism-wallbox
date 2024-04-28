@@ -10,6 +10,11 @@
 namespace esphome {
 namespace prism_wallbox {
 
+static const float const MIN_VOLTAGE = 200.0;
+static const float const MIN_CURRENT = 6.0;
+static const float const MAX_CURRENT = 32.0;
+static const float const MIN_POWER = 1200.0;
+
 
 class PrismWallbox : public Component {
   public:
@@ -17,6 +22,7 @@ class PrismWallbox : public Component {
     std::string mqtt_prefix_;
     std::string port_;
     uint8_t qos_;
+    uint8_t phases_ = 0;
     bool power_meter_;
     std::string max_current_command_topic_;
     std::string control_current_command_topic_;
@@ -24,7 +30,7 @@ class PrismWallbox : public Component {
     // Variable
     float grid_power_ = 0;
     float voltage_ = 0;
-    float control_current_ = 32.0;
+    float control_current_ = MAX_CURRENT;
     float power_ = 0;
     float current_ = 0;
     std::string prism_state_ = "";
@@ -44,6 +50,7 @@ class PrismWallbox : public Component {
     sensor::Sensor* session_time_sensor_;
     text_sensor::TextSensor* mode_text_sensor_;
     select::Select* mode_select_;
+    sensor::Sensor* phases_sensor_;
 
     float get_setup_priority() const override { return setup_priority::AFTER_CONNECTION; }
     void set_mqtt_prefix(std::string mqtt_prefix) { mqtt_prefix_ = mqtt_prefix; }
@@ -63,6 +70,7 @@ class PrismWallbox : public Component {
     void set_session_time_sensor(sensor::Sensor *session_time_sensor) { session_time_sensor_ = session_time_sensor; }
     void set_mode_text_sensor(text_sensor::TextSensor *mode_text_sensor) { mode_text_sensor_ = mode_text_sensor; }
     void set_mode_select(select::Select *mode_select) { mode_select_ = mode_select; }
+    void set_phases_sensor(sensor::Sensor *phases_sensor) { phases_sensor_ = phases_sensor; }
     void dump_config() override;
     void setup() override;
     void on_grid_power_change(float value);
@@ -75,6 +83,8 @@ class PrismWallbox : public Component {
     void set_mode(std::string value);
     void set_prism_mode(std::string value);
     void update_settings();
+    void search_phases();
+    void set_phases(uint8_t value);
 };
 
 

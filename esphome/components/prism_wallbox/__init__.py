@@ -2,7 +2,7 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import number, sensor, select, text_sensor
 from esphome.const import CONF_CURRENT, CONF_ID, CONF_MAX_CURRENT, CONF_MODE, CONF_PORT, CONF_POWER, CONF_QOS, CONF_STATE, CONF_TEMPERATURE, CONF_VOLTAGE
-from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_SECOND, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
+from esphome.const import UNIT_AMPERE, UNIT_CELSIUS, UNIT_EMPTY, UNIT_SECOND, UNIT_VOLT, UNIT_WATT, UNIT_WATT_HOURS
 from esphome.const import DEVICE_CLASS_CURRENT, DEVICE_CLASS_DURATION, DEVICE_CLASS_ENERGY, DEVICE_CLASS_ENERGY_STORAGE, DEVICE_CLASS_POWER, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_VOLTAGE
 from esphome.const import STATE_CLASS_MEASUREMENT, STATE_CLASS_TOTAL_INCREASING
 
@@ -15,6 +15,7 @@ CONF_CONTROL_CURRENT = 'control_current'
 CONF_SESSION_ENERGY = 'session_energy'
 CONF_TOTAL_ENERGY = 'total_energy'
 CONF_SESSION_TIME = 'session_time'
+CONF_PHASES = 'phases'
 CONF_MODE_TEXT = 'mode_text'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 ICON_EV_PLUG = 'mdi:ev-plug-type2'
@@ -113,6 +114,11 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional(CONF_MODE): select.select_schema(
             Mode,
         ),
+        cv.Optional(CONF_PHASES): sensor.sensor_schema(
+            unit_of_measurement=UNIT_EMPTY,
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
     }
 )
 
@@ -178,3 +184,8 @@ async def to_code(config):
         entity = await select.new_select(conf, options=MODE_OPTIONS)
         await cg.register_parented(entity, config[CONF_ID])
         cg.add(var.set_mode_select(entity))
+    if CONF_PHASES in config:
+        conf = config[CONF_PHASES]
+        entity = await sensor.new_sensor(conf)
+        cg.add(var.set_phases_sensor(entity))
+

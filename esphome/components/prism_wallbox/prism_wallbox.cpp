@@ -5,6 +5,8 @@
 namespace esphome {
 namespace prism_wallbox {
 
+#define PTABLE_SIZE 100
+
 static const char *const TAG = "prism_wallbox";
 
 void PrismWallbox::dump_config() {
@@ -171,7 +173,7 @@ void PrismWallbox::setup() {
         this->on_current_change(NAN);
         return;
       }
-      this->on_current_change(*val);
+      this->on_current_change(*val / 1000);
     },
     this->qos_
   );
@@ -197,13 +199,6 @@ void PrismWallbox::on_grid_power_change(float value) {
   this->grid_power_ = value;
   if (this->power_grid_sensor_ != nullptr) {
         this->power_grid_sensor_->publish_state(value);
-  }
-}
-
-void PrismWallbox::on_voltage_change(float value) {
-  this->voltage_ = value;
-  if (this->voltage_sensor_ != nullptr) {
-        this->voltage_sensor_->publish_state(value);
   }
 }
 
@@ -282,8 +277,25 @@ void PrismWallbox::set_control_current(float value) {
   this->control_current_ = value;
 }
 
+void PrismWallbox::set_phases(uint8_t value) {
+  this->phases_ = value;
+  if (this->phases_sensor_ != nullptr) {
+    if (this->phases_ == 0) this->phases_sensor_->publish_state(NAN);
+    else this->phases_sensor_->publish_state(this->phases_);
+  }
+}
+
+void PrismWallbox::on_voltage_change(float value) {
+  this->voltage_ = value;
+  this->search_phases();
+  if (this->voltage_sensor_ != nullptr) {
+        this->voltage_sensor_->publish_state(value);
+  }
+}
+
 void PrismWallbox::on_power_change(float value) {
   this->power_ = value;
+  this->search_phases();
   if (this->power_sensor_ != nullptr) {
         this->power_sensor_->publish_state(value);
   }
@@ -291,8 +303,19 @@ void PrismWallbox::on_power_change(float value) {
 
 void PrismWallbox::on_current_change(float value) {
   this->current_ = value;
+  this->search_phases();
   if (this->current_sensor_ != nullptr) {
         this->current_sensor_->publish_state(value);
+  }
+}
+
+void PrismWallbox::search_phases() {
+  if (this->phases_ == 0) {
+    ESP_LOGW(TAG, "search_phases - voltage: %f - power: %f - current: %f", this->voltage_, this->power_, this->current_);
+    if (this->voltage_ > MIN_VOLTAGE && this->power_ >= MIN_POWER && this->current_ >= MIN_CURRENT) {
+      this->phases_ = (int) this->power_ / this->current_ / this->voltage_ + 0.5;
+      this->set_phases(this->phases_);
+    }
   }
 }
 
@@ -327,13 +350,21 @@ void PrismWallbox::set_prism_mode(std::string value) {
 }
 
 void PrismWallbox::update_settings() {
-  ESP_LOGW(TAG, "update_settings - mode: '%s' - prism_mode: '%s'", this->mode_.c_str(), this->prism_mode_.c_str());
+  ESP_LOGW(TAG, "update_settings - mode: '%s' - prism_mode: '%s'  - prism_state: '%s'", this->mode_.c_str(), this->prism_mode_.c_str(), this->prism_state_.c_str());
+  // prism_state
+  if (this->prism_state_ == "Unplugged") {
+    this->set_phases(0);
+  }
+  // mode
   if (this->mode_ == "Solar") {
     this->set_prism_mode("Normal");
+    if (this->phases_ == 0) {
+      this->set_control_current(MIN_CURRENT);
+    }
   }
   else if (this->mode_ == "Normal") {
     this->set_prism_mode("Normal");
-    this->set_control_current(32);
+    this->set_control_current(MAX_CURRENT);
   }
   else if (this->mode_ == "Pause") {
     this->set_prism_mode("Pause");
