@@ -199,7 +199,7 @@ void PrismWallbox::setup() {
 
 void PrismWallbox::on_grid_power_change(float value) {
   this->grid_power_ = value;
-  if (value != NAN) {
+  if ( this->mode_ == "Solar" && value != NAN) {
     this->set_power_control_modifier(-this->grid_power_ - this->solar_delta_power_);
   }
   if (this->power_grid_sensor_ != nullptr) {
@@ -212,6 +212,7 @@ void PrismWallbox::on_prism_state_change(std::string value) {
   // 2 -> Waiting
   // 3 -> Charging
   // 4 -> Pause
+  std::string old_prism_state = this->prism_state_;
   std::string state = "";
   bool update_needed = false;
   if (value == "1") {
@@ -237,7 +238,7 @@ void PrismWallbox::on_prism_state_change(std::string value) {
   if (this->state_sensor_ != nullptr) {
     this->state_sensor_->publish_state(this->prism_state_);
   }
-  if (update_needed) this->update_settings();
+  if (update_needed) this->update_settings(old_prism_state=old_prism_state);
 }
 
 void PrismWallbox::on_prism_mode_change(std::string value) {
@@ -246,6 +247,7 @@ void PrismWallbox::on_prism_mode_change(std::string value) {
   // 3 -> Pause
   // 7 -> Low power
   std::string prism_mode;
+  std::string old_prism_mode = this->prism_mode_;
   bool update_needed = false;
   if (value == "1") {
     prism_mode = "Solar";
@@ -271,7 +273,7 @@ void PrismWallbox::on_prism_mode_change(std::string value) {
   if (this->mode_text_sensor_ != nullptr) {
     this->mode_text_sensor_->publish_state(this->prism_mode_);
   }
-  if (update_needed)  this->update_settings();
+  if (update_needed)  this->update_settings(old_prism_mode=old_prism_mode);
 }
 
 void PrismWallbox::set_current_control(float value) {
@@ -353,6 +355,7 @@ void PrismWallbox::set_mode_default(std::string value) {
 
 void PrismWallbox::set_mode(std::string value) {
   bool update_needed = false;
+  std::string old_mode = this->mode_;
   if (value != this->mode_) {
     update_needed = true;
   }
@@ -361,7 +364,7 @@ void PrismWallbox::set_mode(std::string value) {
   if (this->mode_select_ != nullptr) {
     this->mode_select_->publish_state(value);
   }
-  if (update_needed)  this->update_settings();
+  if (update_needed)  this->update_settings(old_mode=old_mode);
 }
 
 void PrismWallbox::set_prism_mode(std::string value) {
@@ -381,14 +384,24 @@ void PrismWallbox::set_prism_mode(std::string value) {
   mqtt::global_mqtt_client->publish(this->mode_command_topic_, payload, this->qos_, false);
 }
 
-void PrismWallbox::update_settings() {
-  ESP_LOGD(TAG, "update_settings - mode: '%s' - prism_mode: '%s'  - prism_state: '%s'", this->mode_.c_str(), this->prism_mode_.c_str(), this->prism_state_.c_str());
+void PrismWallbox::update_settings(std::string old_mode, std::string old_prism_mode, std::string old_prism_state) {
+  if (old_mode == "none") old_mode = this->mode_;
+  if (old_prism_mode == "none") old_prism_mode = this->prism_mode_;
+  if (old_prism_state == "none") old_prism_state = this->prism_state_;
+  ESP_LOGD(TAG, "update_settings - mode: '%s' -> '%s' - prism_mode: '%s' -> '%s'  - prism_state: '%s' -> '%s'",
+    old_mode.c_str(),
+    this->mode_.c_str(),
+    old_prism_mode.c_str(),
+    this->prism_mode_.c_str(),
+    old_prism_state.c_str(),
+    this->prism_state_.c_str()
+  );
   // prism_state
   if (this->prism_state_ == "Unplugged") {
     this->set_phases(0);
   }
   // mode
-  if (this->mode_ == "Solar") {
+  if (this->mode_ == "Solar" && old_mode != "Solar") {
     this->set_prism_mode("Normal");
     if (this->phases_ == 0) {
       this->set_current_control(MIN_CURRENT);
@@ -429,6 +442,7 @@ void Mode::control(const std::string &value) {
 SolarDeltaPower::SolarDeltaPower() {}
 void SolarDeltaPower::control(float value) {
   this->parent_->solar_delta_power_ = value;
+  this->publish_state(value);
 }
 
 

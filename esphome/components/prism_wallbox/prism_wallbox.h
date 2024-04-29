@@ -93,7 +93,7 @@ class PrismWallbox : public Component {
     void on_current_change(float value);
     void set_mode(std::string value);
     void set_prism_mode(std::string value);
-    void update_settings();
+    void update_settings(std::string old_mode = "none", std::string old_prism_mode = "none", std::string old_prism_state = "none");
     void search_phases();
     void set_phases(uint8_t value);
     void set_power_control_modifier(float value);
