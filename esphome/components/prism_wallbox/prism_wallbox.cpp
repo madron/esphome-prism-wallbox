@@ -199,6 +199,9 @@ void PrismWallbox::setup() {
 
 void PrismWallbox::on_grid_power_change(float value) {
   this->grid_power_ = value;
+  if (value != NAN) {
+    this->set_power_control_modifier(-this->grid_power_ - this->solar_delta_power_);
+  }
   if (this->power_grid_sensor_ != nullptr) {
         this->power_grid_sensor_->publish_state(value);
   }
@@ -272,19 +275,23 @@ void PrismWallbox::on_prism_mode_change(std::string value) {
 }
 
 void PrismWallbox::set_current_control(float value) {
-  if (value < MIN_CURRENT) {
-    this->current_control_ = MIN_CURRENT;
+  float prism_current;
+  this->current_control_ = value;
+  if (this->current_control_ < 0) this->current_control_ = 0;
+  else if (this->current_control_ > MAX_CURRENT) this->current_control_ = MAX_CURRENT;
+  prism_current = value;
+  if (prism_current < MIN_CURRENT) {
+    prism_current = MIN_CURRENT;
     if (this->mode_ != "Pause" and this->prism_mode_ != "Pause") this->set_prism_mode("Pause");
   }
   else {
-    this->current_control_ = value;
     if (this->mode_ != "Pause" and this->prism_mode_ != "Normal") this->set_prism_mode("Normal");
   }
-  if (value > MAX_CURRENT) {
-    this->current_control_ = MAX_CURRENT;
+  if (prism_current > MAX_CURRENT) {
+    prism_current = MAX_CURRENT;
   }
-  char buffer[4];
-  std::snprintf(buffer, 4, "%.1f", this->current_control_);
+  char buffer[5];
+  std::snprintf(buffer, 5, "%.1f", prism_current);
   std::string payload(buffer);
   mqtt::global_mqtt_client->publish(this->current_control_command_topic_, payload, this->qos_, false);
 }
@@ -329,10 +336,11 @@ void PrismWallbox::on_current_change(float value) {
 
 void PrismWallbox::search_phases() {
   if (this->phases_ == 0) {
-    ESP_LOGD(TAG, "search_phases - voltage: %f - power: %f - current: %f", this->voltage_, this->power_, this->current_);
+    ESP_LOGI(TAG, "search_phases - voltage: %f - power: %f - current: %f", this->voltage_, this->power_, this->current_);
     if (this->voltage_ > MIN_VOLTAGE && this->power_ >= MIN_POWER && this->current_ >= MIN_CURRENT) {
       this->phases_ = (int) this->power_ / this->current_ / this->voltage_ + 0.5;
       this->set_phases(this->phases_);
+      ESP_LOGI(TAG, "search_phases - found: %d", this->phases_);
     }
   }
 }
@@ -397,6 +405,11 @@ void PrismWallbox::update_settings() {
 
 void PrismWallbox::set_power_control_modifier(float value) {
   if (this->power_current_ratio_ > 0 and (this->mode_ == "Solar")) {
+    // ESP_LOGW(TAG, "set_power_control_modifier - power: %.0fW - current: %.3fA + %.3fA = %.3fA", value, this->current_control_, value / this->power_current_ratio_, this->current_control_ + value / this->power_current_ratio_);
+    this->set_current_control(this->current_control_ + value / this->power_current_ratio_);
+    if (this->power_control_modifier_number_  != nullptr) {
+      this->power_control_modifier_number_->publish_state(value);
+    }
   }
 }
 
