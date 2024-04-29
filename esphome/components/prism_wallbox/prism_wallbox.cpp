@@ -238,7 +238,7 @@ void PrismWallbox::on_prism_state_change(std::string value) {
   if (this->state_sensor_ != nullptr) {
     this->state_sensor_->publish_state(this->prism_state_);
   }
-  if (update_needed) this->update_settings(old_prism_state=old_prism_state);
+  if (update_needed) this->update_settings("none", "none", old_prism_state=old_prism_state);
 }
 
 void PrismWallbox::on_prism_mode_change(std::string value) {
@@ -273,10 +273,11 @@ void PrismWallbox::on_prism_mode_change(std::string value) {
   if (this->mode_text_sensor_ != nullptr) {
     this->mode_text_sensor_->publish_state(this->prism_mode_);
   }
-  if (update_needed)  this->update_settings(old_prism_mode=old_prism_mode);
+  if (update_needed) this->update_settings("none", old_prism_mode=old_prism_mode, "none");
 }
 
 void PrismWallbox::set_current_control(float value) {
+  ESP_LOGD(TAG, "set_current_control: %.1fA - mode: '%s' - prism_mode: '%s'", value, this->mode_.c_str(), this->prism_mode_.c_str());
   float prism_current;
   this->current_control_ = value;
   if (this->current_control_ < 0) this->current_control_ = 0;
@@ -364,7 +365,7 @@ void PrismWallbox::set_mode(std::string value) {
   if (this->mode_select_ != nullptr) {
     this->mode_select_->publish_state(value);
   }
-  if (update_needed)  this->update_settings(old_mode=old_mode);
+  if (update_needed) this->update_settings(old_mode=old_mode, "none", "none");
 }
 
 void PrismWallbox::set_prism_mode(std::string value) {
