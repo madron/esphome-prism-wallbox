@@ -395,6 +395,11 @@ void PrismWallbox::update_settings() {
   }
 }
 
+void PrismWallbox::set_power_control_modifier(float value) {
+  if (this->power_current_ratio_ > 0 and (this->mode_ == "Solar")) {
+  }
+}
+
 
 MaxCurrent::MaxCurrent() {}
 void MaxCurrent::control(float value) {
@@ -421,6 +426,7 @@ void PowerControl::control(float value) {
 
 PowerControlModifier::PowerControlModifier() {}
 void PowerControlModifier::control(float value) {
+  this->parent_->set_power_control_modifier(value);
 }
 
 

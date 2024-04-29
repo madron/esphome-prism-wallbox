@@ -96,6 +96,7 @@ class PrismWallbox : public Component {
     void update_settings();
     void search_phases();
     void set_phases(uint8_t value);
+    void set_power_control_modifier(float value);
 };
 
 
