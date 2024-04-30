@@ -411,15 +411,21 @@ void PrismWallbox::update_settings(std::string old_mode, std::string old_prism_m
     this->set_phases(0);
   }
   // mode
-  if (this->mode_ == "Solar" && old_mode != "Solar") {
+  if (this->mode_ == "Normal") {
+    this->set_prism_mode("Normal");
+    this->set_current_control(MAX_CURRENT);
+  }
+  else if (this->mode_ == "Solar" && old_mode != "Solar") {
     this->set_prism_mode("Normal");
     if (this->phases_ == 0) {
       this->set_current_control(MIN_CURRENT);
     }
   }
-  else if (this->mode_ == "Normal") {
+  else if (this->mode_ == "Power modifier" && old_mode != "Power modifier") {
     this->set_prism_mode("Normal");
-    this->set_current_control(MAX_CURRENT);
+    if (this->phases_ == 0) {
+      this->set_current_control(MIN_CURRENT);
+    }
   }
   else if (this->mode_ == "Pause") {
     this->set_prism_mode("Pause");
@@ -427,7 +433,7 @@ void PrismWallbox::update_settings(std::string old_mode, std::string old_prism_m
 }
 
 void PrismWallbox::set_power_control_modifier(float value) {
-  if (this->power_current_ratio_ > 0 and (this->mode_ == "Solar")) {
+  if (this->power_current_ratio_ > 0 and (this->mode_ == "Solar" || this->mode_ == "Power modifier")) {
     // ESP_LOGW(TAG, "set_power_control_modifier - power: %.0fW - current: %.3fA + %.3fA = %.3fA", value, this->current_control_, value / this->power_current_ratio_, this->current_control_ + value / this->power_current_ratio_);
     this->set_current_control(this->current_control_ + value / this->power_current_ratio_);
     if (this->power_control_modifier_number_  != nullptr) {

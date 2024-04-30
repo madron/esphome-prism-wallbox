@@ -39,6 +39,7 @@ POWER_CONTROL_STEP = 1
 MODE_OPTIONS = [
     'Normal',
     'Solar',
+    'Power modifier',
     'Pause',
 ]
 
