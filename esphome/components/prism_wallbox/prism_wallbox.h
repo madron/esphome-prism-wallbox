@@ -35,6 +35,7 @@ class PrismWallbox : public Component {
     float current_ = 0;
     float power_current_ratio_ = 0;
     float solar_delta_power_ = 0;
+    std::string prism_current_payload_ = "";
     std::string prism_state_ = "";
     std::string prism_mode_ = "";
     std::string mode_ = "";
@@ -91,6 +92,7 @@ class PrismWallbox : public Component {
     void set_current_control(float value);
     void on_power_change(float value);
     void on_current_change(float value);
+    void on_prism_control_current_change(std::string value);
     void set_mode(std::string value);
     void set_prism_mode(std::string value);
     void update_settings(std::string old_mode = "none", std::string old_prism_mode = "none", std::string old_prism_state = "none");

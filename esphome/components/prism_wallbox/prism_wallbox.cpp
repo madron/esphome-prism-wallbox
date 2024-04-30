@@ -103,22 +103,14 @@ void PrismWallbox::setup() {
       this->qos_
     );
   }
-  // current_control_sensor_
-  if (this->current_control_sensor_ != nullptr) {
-    mqtt::global_mqtt_client->subscribe(
-      this->current_control_command_topic_,
-      [this](const std::string &topic, const std::string &payload) {
-        auto val = parse_number<float>(payload);
-        if (!val.has_value()) {
-          ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), topic.c_str());
-          this->current_control_sensor_->publish_state(NAN);
-          return;
-        }
-        this->current_control_sensor_->publish_state(*val);
-      },
-      this->qos_
-    );
-  }
+  // current_control
+  mqtt::global_mqtt_client->subscribe(
+    this->current_control_command_topic_,
+    [this](const std::string &topic, const std::string &payload) {
+      this->on_prism_control_current_change(payload);
+    },
+    this->qos_
+  );
   // session_energy_sensor_
   if (this->session_energy_sensor_ != nullptr) {
     mqtt::global_mqtt_client->subscribe(
@@ -195,6 +187,21 @@ void PrismWallbox::setup() {
       this->qos_
     );
   }
+}
+
+void PrismWallbox::on_prism_control_current_change(std::string payload) {
+    auto val = parse_number<float>(payload);
+    this->prism_current_payload_ = payload;
+    if (!val.has_value()) {
+      ESP_LOGW(TAG, "Can't convert '%s' to number! (%s)", payload.c_str(), this->current_control_command_topic_.c_str());
+      if (this->current_control_sensor_ != nullptr) {
+        this->current_control_sensor_->publish_state(NAN);
+      }
+      return;
+    }
+    if (this->current_control_sensor_ != nullptr) {
+      this->current_control_sensor_->publish_state(*val);
+    }
 }
 
 void PrismWallbox::on_grid_power_change(float value) {
@@ -296,7 +303,9 @@ void PrismWallbox::set_current_control(float value) {
   char buffer[5];
   std::snprintf(buffer, 5, "%.1f", prism_current);
   std::string payload(buffer);
-  mqtt::global_mqtt_client->publish(this->current_control_command_topic_, payload, this->qos_, false);
+  if (payload != this->prism_current_payload_) {
+    mqtt::global_mqtt_client->publish(this->current_control_command_topic_, payload, this->qos_, false);
+  }
 }
 
 void PrismWallbox::set_phases(uint8_t value) {
