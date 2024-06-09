@@ -1,5 +1,6 @@
 // #include <sstream>
 #include "prism_wallbox.h"
+#include "esphome/core/hal.h"
 #include "esphome/core/log.h"
 
 namespace esphome {
@@ -23,6 +24,9 @@ void PrismWallbox::setup() {
   this->set_mode(this->mode_default_);
   if (this->solar_delta_power_number_ != nullptr) {
     this->solar_delta_power_number_->publish_state(this->solar_delta_power_);
+  }
+  if (this->solar_delay_number_ != nullptr) {
+    this->solar_delay_number_->publish_state(this->solar_delay_);
   }
   // power_meter_
   if (this->power_meter_) {
@@ -207,7 +211,10 @@ void PrismWallbox::on_prism_control_current_change(std::string payload) {
 void PrismWallbox::on_grid_power_change(float value) {
   this->grid_power_ = value;
   if ( this->mode_ == "Solar" && value != NAN) {
-    this->set_power_control_modifier(-this->grid_power_ - this->solar_delta_power_);
+    if (millis() >= this->solar_last_update_ + (int)this->solar_delay_ * 1000) {
+      this->set_power_control_modifier(-this->grid_power_ - this->solar_delta_power_);
+      this->solar_last_update_ = millis();
+    }
   }
   if (this->power_grid_sensor_ != nullptr) {
         this->power_grid_sensor_->publish_state(value);
@@ -458,6 +465,13 @@ void Mode::control(const std::string &value) {
 SolarDeltaPower::SolarDeltaPower() {}
 void SolarDeltaPower::control(float value) {
   this->parent_->solar_delta_power_ = value;
+  this->publish_state(value);
+}
+
+
+SolarDelay::SolarDelay() {}
+void SolarDelay::control(float value) {
+  this->parent_->solar_delay_ = value;
   this->publish_state(value);
 }
 

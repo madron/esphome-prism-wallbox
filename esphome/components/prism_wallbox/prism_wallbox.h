@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/hal.h"
 #include "esphome/components/number/number.h"
 #include "esphome/components/select/select.h"
 #include "esphome/components/sensor/sensor.h"
@@ -35,6 +36,8 @@ class PrismWallbox : public Component {
     float current_ = 0;
     float power_current_ratio_ = 0;
     float solar_delta_power_ = 0;
+    float solar_delay_ = 0;
+    long int solar_last_update_ = millis();
     std::string prism_current_payload_ = "";
     std::string prism_state_ = "";
     std::string prism_mode_ = "";
@@ -56,6 +59,7 @@ class PrismWallbox : public Component {
     select::Select* mode_select_;
     sensor::Sensor* phases_sensor_;
     number::Number* solar_delta_power_number_;
+    number::Number* solar_delay_number_;
     number::Number* power_control_number_;
     number::Number* power_control_modifier_number_;
 
@@ -81,6 +85,8 @@ class PrismWallbox : public Component {
     void set_phases_sensor(sensor::Sensor *phases_sensor) { phases_sensor_ = phases_sensor; }
     void set_solar_delta_power_default(float  default_value) { solar_delta_power_ = default_value; }
     void set_solar_delta_power_number(number::Number *solar_delta_power_number) { solar_delta_power_number_ = solar_delta_power_number; }
+    void set_solar_delay_default(float  default_value) { solar_delay_ = default_value; }
+    void set_solar_delay_number(number::Number *solar_delay_number) { solar_delay_number_ = solar_delay_number; }
     void set_power_control_number(number::Number *power_control_number) { power_control_number_ = power_control_number; }
     void set_power_control_modifier_number(number::Number *power_control_modifier_number) { power_control_modifier_number_ = power_control_modifier_number; }
     void dump_config() override;
@@ -123,6 +129,15 @@ class Mode : public select::Select, public Parented<PrismWallbox> {
 class SolarDeltaPower : public number::Number, public Parented<PrismWallbox> {
   public:
     SolarDeltaPower();
+
+  protected:
+    void control(float value) override;
+};
+
+
+class SolarDelay : public number::Number, public Parented<PrismWallbox> {
+  public:
+    SolarDelay();
 
   protected:
     void control(float value) override;

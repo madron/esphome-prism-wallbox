@@ -22,6 +22,8 @@ CONF_MODE_DEFAULT = 'mode_default'
 CONF_MODE_TEXT = 'mode_text'
 CONF_SOLAR_DELTA_POWER = 'solar_delta_power'
 CONF_SOLAR_DELTA_POWER_DEFAULT = 'solar_delta_power_default'
+CONF_SOLAR_DELAY = 'solar_delay'
+CONF_SOLAR_DELAY_DEFAULT = 'solar_delay_default'
 ICON_POWER_GRID = 'mdi:transmission-tower'
 ICON_EV_PLUG = 'mdi:ev-plug-type2'
 ICON_CLOCK = 'mdi:clock-time-eight-outline'
@@ -32,6 +34,10 @@ MAX_CURRENT_STEP = 1
 SOLAR_DELTA_POWER_MIN = 0
 SOLAR_DELTA_POWER_MAX = 500
 SOLAR_DELTA_POWER_STEP = 50
+SOLAR_DELAY_MIN = 0
+SOLAR_DELAY_MAX = 10
+SOLAR_DELAY_STEP = 1
+SOLAR_DELAY_DEFAULT = 2
 POWER_CONTROL_MIN = 0
 POWER_CONTROL_MAX = 22000
 POWER_CONTROL_STEP = 1
@@ -49,6 +55,7 @@ PrismWallbox = prism_wallbox_ns.class_('PrismWallbox', cg.Component)
 MaxCurrent = prism_wallbox_ns.class_('MaxCurrent', number.Number)
 Mode = prism_wallbox_ns.class_('Mode', select.Select)
 SolarDeltaPower = prism_wallbox_ns.class_('SolarDeltaPower', number.Number)
+SolarDelay = prism_wallbox_ns.class_('SolarDelay', number.Number)
 PowerControl = prism_wallbox_ns.class_('PowerControl', number.Number)
 PowerControlModifier = prism_wallbox_ns.class_('PowerControlModifier', number.Number)
 
@@ -151,6 +158,12 @@ CONFIG_SCHEMA = cv.Schema(
             unit_of_measurement=UNIT_WATT,
             device_class=DEVICE_CLASS_POWER,
         ),
+        cv.Optional(CONF_SOLAR_DELAY_DEFAULT, default=0): cv.float_range(min=SOLAR_DELAY_MIN, max=SOLAR_DELAY_MAX),
+        cv.Optional(CONF_SOLAR_DELAY): number.number_schema(
+            SolarDelay,
+            unit_of_measurement=UNIT_SECOND,
+            device_class=DEVICE_CLASS_DURATION,
+        ),
     }
 )
 
@@ -241,3 +254,11 @@ async def to_code(config):
         entity = await number.new_number(conf, min_value=SOLAR_DELTA_POWER_MIN, max_value=SOLAR_DELTA_POWER_MAX, step=SOLAR_DELTA_POWER_STEP)
         await cg.register_parented(entity, config[CONF_ID])
         cg.add(var.set_solar_delta_power_number(entity))
+    if CONF_SOLAR_DELAY_DEFAULT in config:
+        conf = config[CONF_SOLAR_DELAY_DEFAULT]
+        cg.add(var.set_solar_delay_default(conf))
+    if CONF_SOLAR_DELAY in config:
+        conf = config[CONF_SOLAR_DELAY]
+        entity = await number.new_number(conf, min_value=SOLAR_DELAY_MIN, max_value=SOLAR_DELAY_MAX, step=SOLAR_DELAY_STEP)
+        await cg.register_parented(entity, config[CONF_ID])
+        cg.add(var.set_solar_delay_number(entity))
