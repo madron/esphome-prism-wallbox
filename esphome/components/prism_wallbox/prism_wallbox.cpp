@@ -441,8 +441,8 @@ void PrismWallbox::update_settings(std::string old_mode, std::string old_prism_m
 
 void PrismWallbox::set_power_control_modifier(float value) {
   if (this->power_current_ratio_ > 0 and (this->mode_ == "Solar" || this->mode_ == "Power modifier")) {
-    // ESP_LOGW(TAG, "set_power_control_modifier - power: %.0fW - current: %.3fA + %.3fA = %.3fA", value, this->current_control_, value / this->power_current_ratio_, this->current_control_ + value / this->power_current_ratio_);
-    this->set_current_control(this->current_control_ + value / this->power_current_ratio_);
+    // ESP_LOGW(TAG, "set_power_control_modifier - power: %.0fW - current: %.3fA + %.3fA = %.3fA", value, this->current_, value / this->power_current_ratio_, this->current_ + value / this->power_current_ratio_);
+    this->set_current_control(this->current_ + value / this->power_current_ratio_);
     if (this->power_control_modifier_number_  != nullptr) {
       this->power_control_modifier_number_->publish_state(value);
     }
